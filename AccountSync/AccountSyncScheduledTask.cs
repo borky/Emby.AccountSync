@@ -40,16 +40,20 @@
         {
             try
             {
+                Log.Debug($"Entered scheduled Synchronize");
                 foreach (var syncProfile in Plugin.Instance.Configuration.SyncList)
                 {
                     var syncToUser = UserManager.GetUserById(syncProfile.SyncToAccount); //Sync To
                     var syncFromUser = UserManager.GetUserById(syncProfile.SyncFromAccount); //Sync From
 
-                    var queryResultIds = LibraryManager.GetInternalItemIds(new InternalItemsQuery { IncludeItemTypes = new[] { "Movie", "Episode" } });
+                    var queryResultIds = LibraryManager.GetInternalItemIds(new InternalItemsQuery { IncludeItemTypes = new[] { "Movie", "Episode" }, Recursive = true });
 
+                    Log.Debug($"Items to sync: { queryResultIds.Length } for user { syncToUser.Name }");
                     for (var i = 0; i <= queryResultIds.Length - 1; i++)
                     {
                         var item = LibraryManager.GetItemById(queryResultIds[i]);
+
+                        Log.Debug($"Synchronize item: { item.Name }");
 
                         Synchronize.SynchronizePlayState(syncToUser, syncFromUser, item);
 
@@ -57,9 +61,9 @@
                     }
                 }
             }
-            catch
+            catch(Exception e)
             {
-                // ignored
+                Log.ErrorException($"Got exception during scheduled Synchronize", e);
             }
 
             progress.Report(100.0);

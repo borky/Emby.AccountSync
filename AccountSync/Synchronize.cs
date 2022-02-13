@@ -27,11 +27,20 @@
             var syncToItemData = UserDataManager.GetUserData(syncToUser, item); //Sync To
             var syncFromItemData = UserDataManager.GetUserData(syncFromUser, item); //Sync From
 
-            if ((syncToItemData.PlaybackPositionTicks != syncFromItemData.PlaybackPositionTicks || syncToItemData.Played != syncFromUser.Played)
-                && (syncFromItemData.PlaystateLastModified > syncToItemData.PlaystateLastModified || syncFromItemData.LastPlayedDate > syncToItemData.LastPlayedDate))
+            Log.Debug($"syncToItemData: { syncToItemData.PlaybackPositionTicks }, { syncToItemData.Played }, { syncToItemData.PlaystateLastModified }, { syncToItemData.LastPlayedDate } ");
+            Log.Debug($"syncFromItemData: { syncFromItemData.PlaybackPositionTicks }, { syncFromItemData.Played }, { syncFromItemData.PlaystateLastModified }, { syncFromItemData.LastPlayedDate } ");
+
+            if (syncFromItemData.PlaystateLastModified == null && syncFromItemData.LastPlayedDate == null)
+                return;
+
+            if ((syncToItemData.PlaystateLastModified == null || syncToItemData.LastPlayedDate == null) 
+                || ((syncToItemData.PlaybackPositionTicks != syncFromItemData.PlaybackPositionTicks || syncToItemData.Played != syncFromUser.Played)
+                    && (syncFromItemData.PlaystateLastModified > syncToItemData.PlaystateLastModified || syncFromItemData.LastPlayedDate > syncToItemData.LastPlayedDate)))
             {
                 syncToItemData.PlaybackPositionTicks = syncFromItemData.Played ? 0 : syncFromItemData.PlaybackPositionTicks;
                 syncToItemData.Played = syncFromItemData.Played;
+
+                Log.Debug($"Synchronized to user { syncToUser.Name } from user { syncFromUser.Name }. From state { syncToItemData.Played } to state { syncFromItemData.Played }");
 
                 UserDataManager.SaveUserData(syncToUser, item, syncToItemData, UserDataSaveReason.PlaybackProgress, CancellationToken.None);
             }
